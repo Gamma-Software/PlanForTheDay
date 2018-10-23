@@ -2,6 +2,9 @@ package com.production.gamma.planfortheday
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.Toast
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -10,7 +13,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListener {
 
     private lateinit var mMap: GoogleMap
 
@@ -21,6 +24,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        // Add Listener onto the add plan button
+        findViewById<View>(R.id.add_plan).setOnClickListener(this)
+
+    }
+
+    override fun onClick(v: View?) {
+        if(v == findViewById(R.id.add_plan))
+        {
+            val toast = Toast.makeText(applicationContext, "Test", Toast.LENGTH_SHORT)
+            toast.show()
+        }
     }
 
     /**
@@ -39,5 +54,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val sydney = LatLng(-34.0, 151.0)
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+
+        mMap.setOnMapClickListener { p0 -> Log.d("Map", p0.toString()) }
     }
+
+
 }
