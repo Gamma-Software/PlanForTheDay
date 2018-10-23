@@ -21,6 +21,29 @@
                   tools:context=".MapsActivity"
                   android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
+        <android.support.design.widget.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center"
+                android:layout_margin="16dp"
+                app:backgroundTint="@android:color/holo_blue_dark"
+                app:layout_anchorGravity="bottom|right|end"
+                app:srcCompat="@drawable/ic_add_white_24dp"
+                android:id="@+id/add_plan_point"
+                android:visibility="gone"
+                android:clickable="false"/>
+
+        <android.support.design.widget.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|left"
+                android:layout_margin="16dp"
+                app:backgroundTint="@android:color/darker_gray"
+                app:layout_anchorGravity="bottom|right|end"
+                app:srcCompat="@drawable/ic_add_white_24dp"
+                android:id="@+id/add_plan_address"
+                android:visibility="gone"
+                android:clickable="false"/>
 
         <android.support.design.widget.FloatingActionButton
                 android:layout_width="wrap_content"
