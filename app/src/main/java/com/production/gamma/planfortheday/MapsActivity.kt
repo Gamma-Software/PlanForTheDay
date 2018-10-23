@@ -55,7 +55,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
 
-        mMap.setOnMapClickListener { p0 -> Log.d("Map", p0.toString()) }
+        mMap.setOnMapClickListener { p0 -> Log.d("Map", p0.toString())
+            mMap.addMarker(MarkerOptions().position(p0).title("marker")) }
     }
 
 
