@@ -58,6 +58,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         openRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.open_rotation)
         closeRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.close_rotation)
 
+        openRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {
+                button1.visibility = View.VISIBLE
+                button2.visibility = View.VISIBLE
+            }
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                button1.isClickable = true
+                button2.isClickable = true
+                isOpen = true
+            }
+        })
+        closeRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                button1.visibility = View.GONE
+                button2.visibility = View.GONE
+                button1.isClickable = false
+                button2.isClickable = false
+                isOpen = false
+            }
+        })
+
     }
 
     override fun onClick(v: View?) {
