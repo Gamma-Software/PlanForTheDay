@@ -92,22 +92,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
                 button.startAnimation(openRotateAddPlanButton)
                 button1.startAnimation(openAddPlanItem)
                 button2.startAnimation(openAddPlanItem)
-                button1.visibility = View.VISIBLE
-                button2.visibility = View.VISIBLE
-                button1.isClickable = true
-                button2.isClickable = true
-                isOpen = true
             }
             else
             {
                 button.startAnimation(closeRotateAddPlanButton)
                 button1.startAnimation(closeAddPlanItem)
                 button2.startAnimation(closeAddPlanItem)
-                button1.visibility = View.GONE
-                button2.visibility = View.GONE
-                button1.isClickable = false
-                button2.isClickable = false
-                isOpen = false
             }
         }
     }
