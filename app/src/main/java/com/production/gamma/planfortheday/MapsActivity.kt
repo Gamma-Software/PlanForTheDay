@@ -45,7 +45,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
     enum class MENU_STATE{
         OPEN, CLOSE, CHECK
     }
-    private var menuState = MENU_STATE.CLOSE
+    private var currentState = MENU_STATE.CLOSE
+    private var nextState = MENU_STATE.CLOSE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,43 +69,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         closeAddPlanItem = AnimationUtils.loadAnimation( this, R.anim.close_add_button)
         openRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.open_rotation)
         closeRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.close_rotation)
-        fadeIn = AnimationUtils.loadAnimation( this, R.anim.fade)
-        fadeOut = AnimationUtils.loadAnimation( this, R.anim.fade_out)
 
-        fadeOut.setAnimationListener(object : Animation.AnimationListener{
-            override fun onAnimationRepeat(animation: Animation?) {}
-            override fun onAnimationStart(animation: Animation?) {}
-            override fun onAnimationEnd(animation: Animation?) {
-                when(menuState){
-                    MENU_STATE.OPEN->{
-                        button.setImageResource(R.drawable.ic_check_white_24dp)
-                        button.startAnimation(fadeIn)
-                    }
-                    MENU_STATE.CLOSE->{
-                    }
-                    MENU_STATE.CHECK->{
-                        button.setImageResource(R.drawable.ic_add_white_24dp)
-                        button.startAnimation(fadeIn)
-                    }
-                }
-            }
-        })
-        fadeIn.setAnimationListener(object : Animation.AnimationListener{
-            override fun onAnimationRepeat(animation: Animation?) {}
-            override fun onAnimationStart(animation: Animation?) {}
-            override fun onAnimationEnd(animation: Animation?) {
-                when(menuState){
-                    MENU_STATE.OPEN->{
-                        menuState = MENU_STATE.CHECK
-                    }
-                    MENU_STATE.CLOSE->{
-                    }
-                    MENU_STATE.CHECK->{
-                        menuState = MENU_STATE.CLOSE
-                    }
-                }
-            }
-        })
 
         openRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation?) {
@@ -115,6 +80,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
             override fun onAnimationEnd(animation: Animation?) {
                 button1.isClickable = true
                 button2.isClickable = true
+                when(nextState){
+                    MENU_STATE.OPEN->{
+                        currentState = MENU_STATE.OPEN
+                    }
+                    MENU_STATE.CLOSE->{
+                        currentState = MENU_STATE.CLOSE
+                    }
+                }
             }
         })
         closeRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
@@ -126,8 +99,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
             override fun onAnimationEnd(animation: Animation?) {
                 button1.visibility = View.GONE
                 button2.visibility = View.GONE
-                if(menuState == MENU_STATE.CHECK){
-                    button.setImageResource(R.drawable.ic_check_white_24dp)
+                when(nextState){
+                    MENU_STATE.CLOSE->{
+                        button.setImageResource(R.drawable.ic_add_white_24dp)
+                        currentState = MENU_STATE.CLOSE
+                    }
+                    MENU_STATE.OPEN->{
+                        currentState = MENU_STATE.OPEN
+                    }
+                    MENU_STATE.CHECK->{
+                        button.setImageResource(R.drawable.ic_check_white_24dp)
+                        currentState = MENU_STATE.CHECK
+                    }
                 }
             }
         })
@@ -137,27 +120,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         when(v)
         {
             button-> {
-                when(menuState){
+                when(currentState){
                     MENU_STATE.OPEN->{
-                        closeMenu()
-                        menuState = MENU_STATE.CLOSE
+                        nextState = MENU_STATE.CLOSE
+                        closeMenu(true)
                     }
                     MENU_STATE.CLOSE->{
+                        nextState = MENU_STATE.OPEN
                         openMenu()
-                        menuState = MENU_STATE.OPEN
                     }
                     MENU_STATE.CHECK->{
-                        button.startAnimation(fadeOut)
+                        nextState = MENU_STATE.CLOSE
+                        closeMenu(false)
                     }
                 }
             }
             button1->{
-                closeMenu()
-                button.startAnimation(fadeOut)
+                nextState = MENU_STATE.CHECK
+                closeMenu(true)
             }
             button2->{
-                closeMenu()
-                button.startAnimation(fadeOut)
+                nextState = MENU_STATE.CHECK
+                closeMenu(true)
             }
         }
     }
@@ -168,8 +152,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         button2.startAnimation(openAddPlanItem)
     }
 
-    private fun closeMenu(){
-        button.startAnimation(closeRotateAddPlanButton)
+    private fun closeMenu(enableAnimation: Boolean){
+        if(enableAnimation)
+            button.startAnimation(closeRotateAddPlanButton)
+        else if(nextState == MENU_STATE.CLOSE){
+            button.setImageResource(R.drawable.ic_add_white_24dp)
+            currentState = MENU_STATE.CLOSE
+        }
         button1.startAnimation(closeAddPlanItem)
         button2.startAnimation(closeAddPlanItem)
     }

@@ -41,7 +41,7 @@
                         app:backgroundTint="@android:color/darker_gray"
                         app:srcCompat="@drawable/ic_add_location_white_24dp"
                         android:id="@+id/add_plan_point"
-                        android:visibility="visible"
+                        android:visibility="gone"
                         android:clickable="false"/>
 
                 <android.support.design.widget.FloatingActionButton
@@ -53,7 +53,7 @@
                         app:backgroundTint="@android:color/darker_gray"
                         app:srcCompat="@drawable/ic_keyboard_black_24dp"
                         android:id="@+id/add_plan_address"
-                        android:visibility="visible"
+                        android:visibility="gone"
                         android:clickable="false"/>
             </LinearLayout>
 
