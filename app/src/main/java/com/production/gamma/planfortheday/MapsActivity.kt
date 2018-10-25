@@ -7,6 +7,12 @@ import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 
 import java.util.*
+import android.graphics.Typeface
+import android.R.attr.y
+import java.lang.reflect.Type
+import android.graphics.drawable.Drawable
+
+
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -42,34 +48,46 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Add a marker in Sydney and move the camera
         //mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(LatLng(48.860170, 2.343449)))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(10.3181466, 123.9029382), 12F))
 
         mMap.setOnMapClickListener {coordsPointed->
             listOfCoords.addElement(coordsPointed)
             zoomPlan()
             addToPlan(coordsPointed)
         }
+/*
+        val path: MutableList<List<LatLng>> = ArrayList()
+        val urlDirections = "https://maps.googleapis.com/maps/api/directions/json?origin=10.3181466,123.9029382&destination=10.311795,123.915864&key=AIzaSyDJuCMZsDL9duF_OgxK-K17ox8_Z3pVY0k"
+
+        val directionsRequest = object : StringRequest(
+            Request.Method.GET, urlDirections, Response.Listener<String> {
+                response ->
+                val jsonResponse = JSONObject(response)
+                // Get routes
+                val routes = jsonResponse.getJSONArray("routes")
+                val legs = routes.getJSONObject(0).getJSONArray("legs")
+                val steps = legs.getJSONObject(0).getJSONArray("steps")
+                for (i in 0 until steps.length()) {
+                    val points = steps.getJSONObject(i).getJSONObject("polyline").getString("points")
+                    path.add(PolyUtil.decode(points))
+                }
+                for (i in 0 until path.size) {
+                    mMap!!.addPolyline(PolylineOptions().addAll(path[i]).color(Color.RED))
+                }
+        }, Response.ErrorListener {
+                _ ->
+        }){}
+        val requestQueue = Volley.newRequestQueue(this)
+        requestQueue.add(directionsRequest)*/
 
     }
 
-    private fun setTextSizeForWidth(paint: Paint, desiredWidth: Float,text: String) {
-
-        // Pick a reasonably large value for the test. Larger values produce
-        // more accurate results, but may cause problems with hardware
-        // acceleration. But there are workarounds for that, too; refer to
-        // http://stackoverflow.com/questions/6253528/font-size-too-large-to-fit-in-cache
-        val testTextSize = 48f
-
-        // Get the bounds of the text, using our testTextSize.
-        paint.textSize = testTextSize
-        val bounds = Rect()
-        paint.getTextBounds(text, 0, text.length, bounds)
-
-        // Calculate the desired size as a proportion of our testTextSize.
-        val desiredTextSize = testTextSize * desiredWidth / bounds.width()
-
-        // Set the paint for that size.
-        paint.textSize = desiredTextSize
+    fun getApproxXToCenterText(text: String, typeface: Typeface, fontSize: Float, widthToFitStringInto: Int): Int {
+        val p = Paint()
+        p.typeface = typeface
+        p.textSize = fontSize
+        val textWidth = p.measureText(text)
+        return ((widthToFitStringInto - textWidth) / 2f).toInt() - (fontSize / 2f).toInt()
     }
 
     private fun addToPlan(currentMarker: LatLng)
@@ -79,15 +97,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val canvas = Canvas(bmp)
 
         val whitePaint = Paint()
-        setTextSizeForWidth(whitePaint, 48F, listOfCoords.size.toString())
+        val fontSize = resources.getDimensionPixelSize(R.dimen.fontSize)
+        whitePaint.textSize = fontSize.toFloat()
         whitePaint.color = Color.WHITE
+
+        val headerFontSize = 50F
+        val header = listOfCoords.size.toString()
+
         val blackPaint = Paint()
         blackPaint.color = Color.BLACK
 
         canvas.drawCircle( 50F, 50F, 50F, blackPaint)
-        canvas.drawText(listOfCoords.size.toString(), 10F, 80F, whitePaint) // paint defines the text color, stroke width, size
+        canvas.drawText(header, 50F, 50F, whitePaint)
 
-        mMap.addMarker(MarkerOptions().position(currentMarker).icon(BitmapDescriptorFactory.fromBitmap(bmp)))
+        //mMap.addMarker(MarkerOptions().position(currentMarker).icon(BitmapDescriptorFactory.fromBitmap(bmp)))
+        mMap.addMarker(MarkerOptions().position(currentMarker))
     }
 
     private fun zoomPlan()
