@@ -9,10 +9,16 @@ import com.google.android.gms.maps.model.*
 import java.util.*
 import android.graphics.Typeface
 import android.R.attr.y
+import android.app.Activity
+import android.content.Intent
+import android.content.IntentSender
+import android.content.pm.PackageManager
 import java.lang.reflect.Type
 import android.graphics.drawable.Drawable
-
-
+import android.location.Location
+import android.support.v4.app.ActivityCompat
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -20,18 +26,31 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var listOfCoords : Vector<LatLng>
 
+    private lateinit var lastLocation: Location
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
+
+    private fun initVar(){
+        // Initialize the list of coords
+        listOfCoords = Vector<LatLng>()
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+    }
+    private fun initViews(){
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
-        // Initialize the list of coords
-        listOfCoords = Vector<LatLng>()
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        initVar()
+        initViews()
     }
 
     /**
@@ -46,40 +65,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Add a marker in Sydney and move the camera
-        //mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(10.3181466, 123.9029382), 12F))
+        zoomToLocation()
 
         mMap.setOnMapClickListener {coordsPointed->
             listOfCoords.addElement(coordsPointed)
             zoomPlan()
             addToPlan(coordsPointed)
         }
-/*
-        val path: MutableList<List<LatLng>> = ArrayList()
-        val urlDirections = "https://maps.googleapis.com/maps/api/directions/json?origin=10.3181466,123.9029382&destination=10.311795,123.915864&key=AIzaSyDJuCMZsDL9duF_OgxK-K17ox8_Z3pVY0k"
+    }
 
-        val directionsRequest = object : StringRequest(
-            Request.Method.GET, urlDirections, Response.Listener<String> {
-                response ->
-                val jsonResponse = JSONObject(response)
-                // Get routes
-                val routes = jsonResponse.getJSONArray("routes")
-                val legs = routes.getJSONObject(0).getJSONArray("legs")
-                val steps = legs.getJSONObject(0).getJSONArray("steps")
-                for (i in 0 until steps.length()) {
-                    val points = steps.getJSONObject(i).getJSONObject("polyline").getString("points")
-                    path.add(PolyUtil.decode(points))
+    private fun zoomToLocation() {
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+            return
+        }else{
+            mMap.isMyLocationEnabled = true
+            fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+                if (location != null) {
+                    lastLocation = location
+                    val currentLatLng = LatLng(location.latitude, location.longitude)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
                 }
-                for (i in 0 until path.size) {
-                    mMap!!.addPolyline(PolylineOptions().addAll(path[i]).color(Color.RED))
-                }
-        }, Response.ErrorListener {
-                _ ->
-        }){}
-        val requestQueue = Volley.newRequestQueue(this)
-        requestQueue.add(directionsRequest)*/
+            }
 
+        }
     }
 
     fun getApproxXToCenterText(text: String, typeface: Typeface, fontSize: Float, widthToFitStringInto: Int): Int {
@@ -125,5 +136,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val h = resources.displayMetrics.heightPixels
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), w, h, 100))
+        mMap.setMaxZoomPreference(12F)
     }
 }
