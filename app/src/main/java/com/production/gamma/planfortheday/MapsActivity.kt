@@ -8,6 +8,7 @@ import android.opengl.Visibility
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
+import android.transition.Fade
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -35,8 +36,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
     private lateinit var closeAddPlanItem: Animation
     private lateinit var openRotateAddPlanButton: Animation
     private lateinit var closeRotateAddPlanButton: Animation
+    private lateinit var fadeIn: Animation
+    private lateinit var fadeOut: Animation
 
-    var isOpen: Boolean = false
+
+
+
+    enum class MENU_STATE{
+        OPEN, CLOSE, CHECK
+    }
+    private var menuState = MENU_STATE.CLOSE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,15 +57,54 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
 
         // Add Listener onto the add plan button
         button  = findViewById(R.id.add_plan)
-        button.setOnClickListener(this)
         button1 = findViewById(R.id.add_plan_address)
         button2 = findViewById(R.id.add_plan_point)
+        button.setOnClickListener(this)
+        button1.setOnClickListener(this)
+        button2.setOnClickListener(this)
 
 
         openAddPlanItem = AnimationUtils.loadAnimation( this, R.anim.open_add_button)
         closeAddPlanItem = AnimationUtils.loadAnimation( this, R.anim.close_add_button)
         openRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.open_rotation)
         closeRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.close_rotation)
+        fadeIn = AnimationUtils.loadAnimation( this, R.anim.fade)
+        fadeOut = AnimationUtils.loadAnimation( this, R.anim.fade_out)
+
+        fadeOut.setAnimationListener(object : Animation.AnimationListener{
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                when(menuState){
+                    MENU_STATE.OPEN->{
+                        button.setImageResource(R.drawable.ic_check_white_24dp)
+                        button.startAnimation(fadeIn)
+                    }
+                    MENU_STATE.CLOSE->{
+                    }
+                    MENU_STATE.CHECK->{
+                        button.setImageResource(R.drawable.ic_add_white_24dp)
+                        button.startAnimation(fadeIn)
+                    }
+                }
+            }
+        })
+        fadeIn.setAnimationListener(object : Animation.AnimationListener{
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                when(menuState){
+                    MENU_STATE.OPEN->{
+                        menuState = MENU_STATE.CHECK
+                    }
+                    MENU_STATE.CLOSE->{
+                    }
+                    MENU_STATE.CHECK->{
+                        menuState = MENU_STATE.CLOSE
+                    }
+                }
+            }
+        })
 
         openRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation?) {
@@ -67,39 +115,63 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
             override fun onAnimationEnd(animation: Animation?) {
                 button1.isClickable = true
                 button2.isClickable = true
-                isOpen = true
             }
         })
         closeRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationStart(animation: Animation?) {
+                button1.isClickable = false
+                button2.isClickable = false
+            }
             override fun onAnimationRepeat(animation: Animation?) {}
             override fun onAnimationEnd(animation: Animation?) {
                 button1.visibility = View.GONE
                 button2.visibility = View.GONE
-                button1.isClickable = false
-                button2.isClickable = false
-                isOpen = false
+                if(menuState == MENU_STATE.CHECK){
+                    button.setImageResource(R.drawable.ic_check_white_24dp)
+                }
             }
         })
-
     }
 
     override fun onClick(v: View?) {
-        if(v == button)
+        when(v)
         {
-            if(!isOpen)
-            {
-                button.startAnimation(openRotateAddPlanButton)
-                button1.startAnimation(openAddPlanItem)
-                button2.startAnimation(openAddPlanItem)
+            button-> {
+                when(menuState){
+                    MENU_STATE.OPEN->{
+                        closeMenu()
+                        menuState = MENU_STATE.CLOSE
+                    }
+                    MENU_STATE.CLOSE->{
+                        openMenu()
+                        menuState = MENU_STATE.OPEN
+                    }
+                    MENU_STATE.CHECK->{
+                        button.startAnimation(fadeOut)
+                    }
+                }
             }
-            else
-            {
-                button.startAnimation(closeRotateAddPlanButton)
-                button1.startAnimation(closeAddPlanItem)
-                button2.startAnimation(closeAddPlanItem)
+            button1->{
+                closeMenu()
+                button.startAnimation(fadeOut)
+            }
+            button2->{
+                closeMenu()
+                button.startAnimation(fadeOut)
             }
         }
+    }
+
+    private fun openMenu(){
+        button.startAnimation(openRotateAddPlanButton)
+        button1.startAnimation(openAddPlanItem)
+        button2.startAnimation(openAddPlanItem)
+    }
+
+    private fun closeMenu(){
+        button.startAnimation(closeRotateAddPlanButton)
+        button1.startAnimation(closeAddPlanItem)
+        button2.startAnimation(closeAddPlanItem)
     }
 
     /**
