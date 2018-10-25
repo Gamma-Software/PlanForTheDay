@@ -19,8 +19,11 @@ import android.util.Log
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.gms.location.places.ui.PlacePicker
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -55,6 +58,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        private const val PLACE_PICKER_REQUEST = 3
     }
 
     private fun initVar(){
@@ -138,11 +142,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
 
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PLACE_PICKER_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                val place = PlacePicker.getPlace(this, data)
+                var addressText = place.name.toString()
+                addressText += "\n" + place.address.toString()
+
+                addToPlan(place.latLng)
+            }
+        }
+    }
+
     override fun onClick(v: View?) {
         when(v)
         {
             button-> {
-                when(currentState){
+                /*when(currentState){
                     MENU_STATE.OPEN->{
                         nextState = MENU_STATE.CLOSE
                         closeMenu(true)
@@ -155,10 +172,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
                         nextState = MENU_STATE.CLOSE
                         closeMenu(false)
                     }
-                }
+                }*/
+
+                loadPlacePicker()
             }
             button1->{
-                nextState = MENU_STATE.CHECK
+                nextState = MENU_STATE.CLOSE
                 closeMenu(true)
             }
             button2->{
@@ -259,5 +278,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), w, h, 100))
         mMap.setMaxZoomPreference(12F)
+    }
+    private fun loadPlacePicker() {
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE)
+            return
+        }
+
+        val builder = PlacePicker.IntentBuilder()
+        try {
+            startActivityForResult(builder.build(this@MapsActivity), PLACE_PICKER_REQUEST)
+        } catch (e: GooglePlayServicesRepairableException) {
+            e.printStackTrace()
+        } catch (e: GooglePlayServicesNotAvailableException) {
+            e.printStackTrace()
+        }
     }
 }
