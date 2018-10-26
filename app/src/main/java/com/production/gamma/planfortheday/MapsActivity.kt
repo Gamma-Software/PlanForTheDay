@@ -2,6 +2,7 @@ package com.production.gamma.planfortheday
 
 import android.graphics.*
 import android.support.v7.app.AppCompatActivity
+import android.support.design.widget.NavigationView
 import android.os.Bundle
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
@@ -17,11 +18,14 @@ import java.lang.reflect.Type
 import android.graphics.drawable.Drawable
 import android.location.Location
 import android.support.v4.app.ActivityCompat
+import android.view.Menu
+import android.view.MenuItem
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import kotlinx.android.synthetic.main.activity_maps.*
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener{
 
     private lateinit var mMap: GoogleMap
     private lateinit var listOfCoords : Vector<LatLng>
@@ -51,6 +55,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         initVar()
         initViews()
+
+        nav_view.setNavigationItemSelectedListener(this)
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return true
+    }
+
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        // Handle navigation view item clicks here.
+        /*when (item.itemId) {
+            R.id.nav_camera -> {
+                // Handle the camera action
+            }
+            R.id.nav_gallery -> {
+
+            }
+            R.id.nav_slideshow -> {
+
+            }
+            R.id.nav_manage -> {
+
+            }
+            R.id.nav_share -> {
+
+            }
+            R.id.nav_send -> {
+
+            }
+        }
+
+        drawer_layout.closeDrawer(GravityCompat.START)*/
+        return true
     }
 
     /**
