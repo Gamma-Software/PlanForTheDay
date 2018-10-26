@@ -59,8 +59,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         initViews()
 
         nav_view.setNavigationItemSelectedListener(this)
-
-        nav_view.menu.add(1,1,1,"test").setOnMenuItemClickListener(this)
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
@@ -128,6 +126,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             listOfCoords.addElement(coordsPointed)
             zoomPlan()
             addToPlan(coordsPointed)
+            nav_view.menu.add(1,listOfCoords.size,1,"Marker " + listOfCoords.size.toString()).setOnMenuItemClickListener(this)
         }
     }
 
