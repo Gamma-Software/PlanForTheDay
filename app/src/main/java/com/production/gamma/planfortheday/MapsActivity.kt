@@ -126,7 +126,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             listOfCoords.addElement(coordsPointed)
             zoomPlan()
             addToPlan(coordsPointed)
-            nav_view.menu.add(1,listOfCoords.size,1,"Marker " + listOfCoords.size.toString()).setOnMenuItemClickListener(this)
+            val itemToAdd = nav_view.menu.add(1,listOfCoords.size,1,"Marker " + listOfCoords.size.toString())
+            itemToAdd.setOnMenuItemClickListener(this)
+            itemToAdd.setIcon(R.drawable.ic_launcher_background)
         }
     }
 
