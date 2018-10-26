@@ -1,26 +1,56 @@
 package com.production.gamma.planfortheday
 
+import android.graphics.*
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.*
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import java.util.*
+import android.graphics.Typeface
+import android.R.attr.y
+import android.app.Activity
+import android.content.Intent
+import android.content.IntentSender
+import android.content.pm.PackageManager
+import java.lang.reflect.Type
+import android.graphics.drawable.Drawable
+import android.location.Location
+import android.support.v4.app.ActivityCompat
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
+    private lateinit var listOfCoords : Vector<LatLng>
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_maps)
+    private lateinit var lastLocation: Location
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
+
+    private fun initVar(){
+        // Initialize the list of coords
+        listOfCoords = Vector<LatLng>()
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+    }
+    private fun initViews(){
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_maps)
+
+        initVar()
+        initViews()
     }
 
     /**
@@ -35,9 +65,77 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        zoomToLocation()
+
+        mMap.setOnMapClickListener {coordsPointed->
+            listOfCoords.addElement(coordsPointed)
+            zoomPlan()
+            addToPlan(coordsPointed)
+        }
+    }
+
+    private fun zoomToLocation() {
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+            return
+        }else{
+            mMap.isMyLocationEnabled = true
+            fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+                if (location != null) {
+                    lastLocation = location
+                    val currentLatLng = LatLng(location.latitude, location.longitude)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
+                }
+            }
+
+        }
+    }
+
+    fun getApproxXToCenterText(text: String, typeface: Typeface, fontSize: Float, widthToFitStringInto: Int): Int {
+        val p = Paint()
+        p.typeface = typeface
+        p.textSize = fontSize
+        val textWidth = p.measureText(text)
+        return ((widthToFitStringInto - textWidth) / 2f).toInt() - (fontSize / 2f).toInt()
+    }
+
+    private fun addToPlan(currentMarker: LatLng)
+    {
+        val conf = Bitmap.Config.ARGB_8888
+        val bmp = Bitmap.createBitmap(100, 100, conf)
+        val canvas = Canvas(bmp)
+
+        val whitePaint = Paint()
+        val fontSize = resources.getDimensionPixelSize(R.dimen.fontSize)
+        whitePaint.textSize = fontSize.toFloat()
+        whitePaint.color = Color.WHITE
+
+        val headerFontSize = 50F
+        val header = listOfCoords.size.toString()
+
+        val blackPaint = Paint()
+        blackPaint.color = Color.BLACK
+
+        canvas.drawCircle( 50F, 50F, 50F, blackPaint)
+        canvas.drawText(header, 50F, 50F, whitePaint)
+
+        //mMap.addMarker(MarkerOptions().position(currentMarker).icon(BitmapDescriptorFactory.fromBitmap(bmp)))
+        mMap.addMarker(MarkerOptions().position(currentMarker))
+    }
+
+    private fun zoomPlan()
+    {
+        val bounds = LatLngBounds.Builder()
+        listOfCoords.forEach {
+            bounds.include(it)
+        }
+
+        val w = resources.displayMetrics.widthPixels
+        val h = resources.displayMetrics.heightPixels
+
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), w, h, 100))
+        mMap.setMaxZoomPreference(12F)
     }
 }
