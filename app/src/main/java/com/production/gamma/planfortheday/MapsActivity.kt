@@ -20,12 +20,14 @@ import android.location.Location
 import android.support.v4.app.ActivityCompat
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_maps.*
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener{
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, MenuItem.OnMenuItemClickListener{
+
 
     private lateinit var mMap: GoogleMap
     private lateinit var listOfCoords : Vector<LatLng>
@@ -57,6 +59,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         initViews()
 
         nav_view.setNavigationItemSelectedListener(this)
+
+        nav_view.menu.add(1,1,1,"test").setOnMenuItemClickListener(this)
+    }
+
+    override fun onMenuItemClick(item: MenuItem?): Boolean {
+        if(item?.itemId == 1)
+        {
+            Toast.makeText(this,"test", Toast.LENGTH_LONG).show()
+        }
+        return true
     }
 
 
