@@ -16,12 +16,28 @@ import android.graphics.drawable.Drawable
 import android.location.Location
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
+import android.support.v4.widget.DrawerLayout
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
+import android.widget.Toast
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.gms.location.places.ui.PlacePicker
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.android.synthetic.main.activity_maps.*
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListener {
-
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, MenuItem.OnMenuItemClickListener{
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListener, NavigationView.OnNavigationItemSelectedListener, MenuItem.OnMenuItemClickListener{
 
     private lateinit var mMap: GoogleMap
     private lateinit var mMenu: DrawerLayout
@@ -152,7 +168,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         when(v)
         {
             button-> {
-                /*when(currentState){
+                when(currentState){
                     MENU_STATE.OPEN->{
                         nextState = MENU_STATE.CLOSE
                         closeMenu(true)
@@ -165,13 +181,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
                         nextState = MENU_STATE.CLOSE
                         closeMenu(false)
                     }
-                }*/
-
-                loadPlacePicker()
+                }
             }
             button1->{
                 nextState = MENU_STATE.CLOSE
                 closeMenu(true)
+                loadPlacePicker()
             }
             button2->{
                 nextState = MENU_STATE.CHECK
@@ -212,7 +227,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         return true
     }
 
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu, menu)
@@ -230,21 +244,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             R.id.nav_camera -> {
                 // Handle the camera action
             }
-            R.id.nav_gallery -> {
 
-            }
-            R.id.nav_slideshow -> {
-
-            }
-            R.id.nav_manage -> {
-
-            }
-            R.id.nav_share -> {
-
-            }
-            R.id.nav_send -> {
-
-            }
         }
 
         drawer_layout.closeDrawer(GravityCompat.START)*/
@@ -262,16 +262,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.setMaxZoomPreference(14F)
 
         zoomToLocation()
 
         mMap.setOnMapClickListener {coordsPointed->
-            listOfCoords.addElement(coordsPointed)
-            zoomPlan()
-            addToPlan(coordsPointed)
-            val itemToAdd = nav_view.menu.add(1,listOfCoords.size,1,"Marker " + listOfCoords.size.toString())
-            itemToAdd.setOnMenuItemClickListener(this)
-            itemToAdd.setIcon(R.drawable.ic_place_black_24dp)
+            if(currentState == MENU_STATE.CHECK){
+                addToPlan(coordsPointed)
+            }else{
+                Toast.makeText(this,"Click on the + button to add", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -304,6 +304,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
     private fun addToPlan(currentMarker: LatLng)
     {
+        listOfCoords.addElement(currentMarker)
+
         val conf = Bitmap.Config.ARGB_8888
         val bmp = Bitmap.createBitmap(100, 100, conf)
         val canvas = Canvas(bmp)
@@ -324,6 +326,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
         //mMap.addMarker(MarkerOptions().position(currentMarker).icon(BitmapDescriptorFactory.fromBitmap(bmp)))
         mMap.addMarker(MarkerOptions().position(currentMarker))
+
+        val itemToAdd = nav_view.menu.add(1,listOfCoords.size,1,"Marker " + listOfCoords.size.toString())
+        itemToAdd.setOnMenuItemClickListener(this)
+        itemToAdd.setIcon(R.drawable.ic_place_black_24dp)
+
+        zoomPlan()
     }
 
     private fun zoomPlan()
@@ -336,8 +344,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         val w = resources.displayMetrics.widthPixels
         val h = resources.displayMetrics.heightPixels
 
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), w, h, 100))
-        mMap.setMaxZoomPreference(12F)
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), w, h, 80))
     }
     private fun loadPlacePicker() {
         if (ActivityCompat.checkSelfPermission(this,
