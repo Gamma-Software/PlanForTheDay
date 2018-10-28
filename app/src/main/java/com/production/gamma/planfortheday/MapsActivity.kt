@@ -14,6 +14,7 @@ import android.graphics.*
 import java.lang.reflect.Type
 import android.graphics.drawable.Drawable
 import android.location.Location
+import android.net.Uri
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
 import android.support.v4.widget.DrawerLayout
@@ -217,6 +218,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         {
             if(item?.itemId == currentMarkerIndex)
             {
+                goToLocation(marker)
                 Toast.makeText(this,"Marker " + currentMarkerIndex + " touched", Toast.LENGTH_SHORT).show()
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker, 12f))
                 // close drawer when item is tapped
@@ -294,6 +296,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         }
     }
 
+    private fun goToLocation(location: LatLng)
+    {
+        val gmmIntentUri = Uri.parse("google.navigation:q="+location.latitude.toString()+","+location.longitude.toString())
+        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+        mapIntent.setPackage("com.google.android.apps.maps")
+        startActivity(mapIntent)
+    }
+
     fun getApproxXToCenterText(text: String, typeface: Typeface, fontSize: Float, widthToFitStringInto: Int): Int {
         val p = Paint()
         p.typeface = typeface
@@ -327,7 +337,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
         //mMap.addMarker(MarkerOptions().position(currentMarker).icon(BitmapDescriptorFactory.fromBitmap(bmp)))
         mMap.addMarker(MarkerOptions().position(currentMarker))
 
-        val itemToAdd = nav_view.menu.add(1,listOfCoords.size,1,"Marker " + listOfCoords.size.toString())
+        val itemToAdd = nav_view.menu.add(1,listOfCoords.size,1,"GoTo Marker " + listOfCoords.size.toString())
         itemToAdd.setOnMenuItemClickListener(this)
         itemToAdd.setIcon(R.drawable.ic_place_black_24dp)
 
