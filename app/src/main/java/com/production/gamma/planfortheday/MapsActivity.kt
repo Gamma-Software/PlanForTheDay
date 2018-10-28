@@ -265,12 +265,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setMaxZoomPreference(14F)
-
         zoomToLocation()
 
         mMap.setOnMapClickListener {coordsPointed->
             if(currentState == MENU_STATE.CHECK){
                 addToPlan(coordsPointed)
+            }else if(currentState == MENU_STATE.OPEN){
+                closeMenu(true)
             }else{
                 Toast.makeText(this,"Click on the + button to add", Toast.LENGTH_SHORT).show()
             }
