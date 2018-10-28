@@ -18,8 +18,12 @@ import java.lang.reflect.Type
 import android.graphics.drawable.Drawable
 import android.location.Location
 import android.support.v4.app.ActivityCompat
+import android.support.v4.view.GravityCompat
+import android.support.v4.widget.DrawerLayout
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
 import android.widget.Toast
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
@@ -28,8 +32,8 @@ import kotlinx.android.synthetic.main.activity_maps.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, MenuItem.OnMenuItemClickListener{
 
-
     private lateinit var mMap: GoogleMap
+    private lateinit var mMenu: DrawerLayout
     private lateinit var listOfCoords : Vector<LatLng>
 
     private lateinit var lastLocation: Location
@@ -49,6 +53,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        mMenu = findViewById(R.id.drawer_layout)
+        nav_view.setNavigationItemSelectedListener(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,13 +65,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
         initVar()
         initViews()
 
-        nav_view.setNavigationItemSelectedListener(this)
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
-        if(item?.itemId == 1)
+        var currentMarkerIndex = 1
+        for(marker in listOfCoords)
         {
-            Toast.makeText(this,"test", Toast.LENGTH_LONG).show()
+            if(item?.itemId == currentMarkerIndex)
+            {
+                Toast.makeText(this,"Marker " + currentMarkerIndex + " touched", Toast.LENGTH_SHORT).show()
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker, 12f))
+                // close drawer when item is tapped
+                mMenu.closeDrawers()
+            }
+            currentMarkerIndex++
         }
         return true
     }
@@ -128,7 +142,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             addToPlan(coordsPointed)
             val itemToAdd = nav_view.menu.add(1,listOfCoords.size,1,"Marker " + listOfCoords.size.toString())
             itemToAdd.setOnMenuItemClickListener(this)
-            itemToAdd.setIcon(R.drawable.ic_launcher_background)
+            itemToAdd.setIcon(R.drawable.ic_place_black_24dp)
         }
     }
 
