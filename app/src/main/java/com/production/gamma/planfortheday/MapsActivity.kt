@@ -271,6 +271,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListen
             if(currentState == MENU_STATE.CHECK){
                 addToPlan(coordsPointed)
             }else if(currentState == MENU_STATE.OPEN){
+                nextState = MENU_STATE.CLOSE
                 closeMenu(true)
             }else{
                 Toast.makeText(this,"Click on the + button to add", Toast.LENGTH_SHORT).show()
