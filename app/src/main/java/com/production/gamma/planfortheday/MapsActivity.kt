@@ -1,34 +1,25 @@
 package com.production.gamma.planfortheday
 
-import android.graphics.*
 import android.support.v7.app.AppCompatActivity
 import android.support.design.widget.NavigationView
 import android.os.Bundle
-import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.*
 
 import java.util.*
-import android.graphics.Typeface
 import android.R.attr.y
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.graphics.*
 import java.lang.reflect.Type
 import android.graphics.drawable.Drawable
 import android.location.Location
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
-import android.support.v4.view.GravityCompat
-import android.support.v4.widget.DrawerLayout
-import android.view.Menu
-import android.view.MenuItem
-import android.view.MotionEvent
-import android.view.View
-import android.widget.Toast
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import kotlinx.android.synthetic.main.activity_maps.*
 
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, View.OnClickListener {
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener, MenuItem.OnMenuItemClickListener{
 
@@ -36,10 +27,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
     private lateinit var mMenu: DrawerLayout
     private lateinit var listOfCoords : Vector<LatLng>
 
+    private lateinit var button: FloatingActionButton
+    private lateinit var button1: FloatingActionButton
+    private lateinit var button2: FloatingActionButton
+
+    private lateinit var openAddPlanItem: Animation
+    private lateinit var closeAddPlanItem: Animation
+    private lateinit var openRotateAddPlanButton: Animation
+    private lateinit var closeRotateAddPlanButton: Animation
+    private lateinit var fadeIn: Animation
+    private lateinit var fadeOut: Animation
+
+    enum class MENU_STATE{
+        OPEN, CLOSE, CHECK
+    }
+    private var currentState = MENU_STATE.CLOSE
+    private var nextState = MENU_STATE.CLOSE
+
     private lateinit var lastLocation: Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        private const val PLACE_PICKER_REQUEST = 3
     }
 
     private fun initVar(){
@@ -54,8 +63,66 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        // Add Listener onto the add plan button
+        button  = findViewById(R.id.add_plan)
+        button1 = findViewById(R.id.add_plan_address)
+        button2 = findViewById(R.id.add_plan_point)
+        button.setOnClickListener(this)
+        button1.setOnClickListener(this)
+        button2.setOnClickListener(this)
+
         mMenu = findViewById(R.id.drawer_layout)
         nav_view.setNavigationItemSelectedListener(this)
+    }
+    private fun initAnimation(){
+        openAddPlanItem = AnimationUtils.loadAnimation( this, R.anim.open_add_button)
+        closeAddPlanItem = AnimationUtils.loadAnimation( this, R.anim.close_add_button)
+        openRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.open_rotation)
+        closeRotateAddPlanButton = AnimationUtils.loadAnimation( this, R.anim.close_rotation)
+
+        openRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {
+                button1.visibility = View.VISIBLE
+                button2.visibility = View.VISIBLE
+            }
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                button1.isClickable = true
+                button2.isClickable = true
+                when(nextState){
+                    MENU_STATE.OPEN->{
+                        currentState = MENU_STATE.OPEN
+                    }
+                    MENU_STATE.CLOSE->{
+                        currentState = MENU_STATE.CLOSE
+                    }
+                }
+            }
+        })
+        closeRotateAddPlanButton.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {
+                button1.isClickable = false
+                button2.isClickable = false
+            }
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                button1.visibility = View.GONE
+                button2.visibility = View.GONE
+                when(nextState){
+                    MENU_STATE.CLOSE->{
+                        button.setImageResource(R.drawable.ic_add_white_24dp)
+                        currentState = MENU_STATE.CLOSE
+                    }
+                    MENU_STATE.OPEN->{
+                        currentState = MENU_STATE.OPEN
+                    }
+                    MENU_STATE.CHECK->{
+                        button.setImageResource(R.drawable.ic_check_white_24dp)
+                        currentState = MENU_STATE.CHECK
+                    }
+                }
+            }
+        })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +131,69 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
         initVar()
         initViews()
+        initAnimation()
 
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PLACE_PICKER_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                val place = PlacePicker.getPlace(this, data)
+                var addressText = place.name.toString()
+                addressText += "\n" + place.address.toString()
+
+                addToPlan(place.latLng)
+            }
+        }
+    }
+
+    override fun onClick(v: View?) {
+        when(v)
+        {
+            button-> {
+                /*when(currentState){
+                    MENU_STATE.OPEN->{
+                        nextState = MENU_STATE.CLOSE
+                        closeMenu(true)
+                    }
+                    MENU_STATE.CLOSE->{
+                        nextState = MENU_STATE.OPEN
+                        openMenu()
+                    }
+                    MENU_STATE.CHECK->{
+                        nextState = MENU_STATE.CLOSE
+                        closeMenu(false)
+                    }
+                }*/
+
+                loadPlacePicker()
+            }
+            button1->{
+                nextState = MENU_STATE.CLOSE
+                closeMenu(true)
+            }
+            button2->{
+                nextState = MENU_STATE.CHECK
+                closeMenu(true)
+            }
+        }
+    }
+
+    private fun openMenu(){
+        button.startAnimation(openRotateAddPlanButton)
+        button1.startAnimation(openAddPlanItem)
+        button2.startAnimation(openAddPlanItem)
+    }
+    private fun closeMenu(enableAnimation: Boolean){
+        if(enableAnimation)
+            button.startAnimation(closeRotateAddPlanButton)
+        else if(nextState == MENU_STATE.CLOSE){
+            button.setImageResource(R.drawable.ic_add_white_24dp)
+            currentState = MENU_STATE.CLOSE
+        }
+        button1.startAnimation(closeAddPlanItem)
+        button2.startAnimation(closeAddPlanItem)
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
@@ -209,5 +338,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, NavigationView.OnN
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds.build(), w, h, 100))
         mMap.setMaxZoomPreference(12F)
+    }
+    private fun loadPlacePicker() {
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE)
+            return
+        }
+
+        val builder = PlacePicker.IntentBuilder()
+        try {
+            startActivityForResult(builder.build(this@MapsActivity), PLACE_PICKER_REQUEST)
+        } catch (e: GooglePlayServicesRepairableException) {
+            e.printStackTrace()
+        } catch (e: GooglePlayServicesNotAvailableException) {
+            e.printStackTrace()
+        }
     }
 }
