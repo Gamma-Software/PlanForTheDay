@@ -17,8 +17,14 @@ import java.lang.reflect.Type
 import android.graphics.drawable.Drawable
 import android.location.Location
 import android.support.v4.app.ActivityCompat
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.maps.android.PolyUtil
+import org.json.JSONObject
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -72,6 +78,41 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             zoomPlan()
             addToPlan(coordsPointed)
         }
+
+        val latLngOrigin = LatLng(48.970447, 2.194971) // Tech
+        val latLngOrigin2 = LatLng(48.972770, 2.190612) // Pompe fun
+        val latLngOrigin3 = LatLng(48.970756, 2.195972) // auchan
+        mMap.addMarker(MarkerOptions().position(latLngOrigin).title("Tech"))
+        mMap.addMarker(MarkerOptions().position(latLngOrigin2).title("Pompe funebre"))
+        mMap.addMarker(MarkerOptions().position(latLngOrigin3).title("Auchan"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngOrigin, 14.5f))
+
+        val path: MutableList<List<LatLng>> = ArrayList()
+        val urlDirections = "https://maps.googleapis.com/maps/api/directions/json?origin="+latLngOrigin.latitude.toString()+
+                ","+latLngOrigin.longitude.toString()+"SA&destination="+latLngOrigin3.latitude.toString()+","+latLngOrigin3.longitude.toString()+
+                "&waypoints=optimize:true|"+latLngOrigin2.latitude.toString()+","+latLngOrigin2.longitude.toString()+"&key=" + getString(R.string.google_maps_key)
+        val directionsRequest = object : StringRequest(
+            Request.Method.GET, urlDirections, Response.Listener<String> {
+                response ->
+
+            val jsonResponse = JSONObject(response)
+            // Get routes
+            val routes = jsonResponse.getJSONArray("routes")
+            val legs = routes.getJSONObject(0).getJSONArray("legs")
+            val steps = legs.getJSONObject(0).getJSONArray("steps")
+            for (i in 0 until steps.length()) {
+                val points = steps.getJSONObject(i).getJSONObject("polyline").getString("points")
+                path.add(PolyUtil.decode(points))
+            }
+
+            for (i in 0 until path.size) {
+                mMap.addPolyline(PolylineOptions().addAll(path[i]).color(Color.RED))
+            }
+        }, Response.ErrorListener {
+                _ ->
+        }){}
+        val requestQueue = Volley.newRequestQueue(this)
+        requestQueue.add(directionsRequest)
     }
 
     private fun zoomToLocation() {
